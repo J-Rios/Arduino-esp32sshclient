@@ -1,0 +1,16 @@
+{
+	"name": "esp32sshclient",
+	"keywords": "esp32, ssh, client, libssh, libssh2, communication",
+	"description": "Arduino library for ESP32 that implement an SSH client to connect and execute commands in a remote Server.",
+	"authors": {
+		"name": "JRios",
+		"url": "https://github.com/J-Rios"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/J-Rios/Arduino-esp32sshclient"
+	},	
+	"version": "1.0",
+	"frameworks": "arduino",
+	"platforms": ["espressif32"]
+}

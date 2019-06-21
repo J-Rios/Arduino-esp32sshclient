@@ -1,0 +1,18 @@
+###########################################
+# Syntax Coloring Map For ESP32SSHCLIENT
+###########################################
+
+###########################################
+# Datatypes (KEYWORD1)
+###########################################
+
+ESP32SSHCLIENT	KEYWORD1
+
+###########################################
+# Methods and Functions (KEYWORD2)
+###########################################
+
+connect	KEYWORD2
+disconnect	KEYWORD2
+is_connected	KEYWORD2
+send_cmd	KEYWORD2
