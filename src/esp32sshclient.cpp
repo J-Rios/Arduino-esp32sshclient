@@ -3,7 +3,7 @@
 // File: esp32sshclient.h
 // Description: Simple abstraction layer for create and use a SSH client from libssh2.
 // Created on: 16 jun. 2019
-// Last modified date: 21 jun. 2019
+// Last modified date: 29 jun. 2019
 // Version: 0.0.1
 /**************************************************************************************************/
 
@@ -16,6 +16,7 @@
 /* Macros */
 
 #define _millis() (unsigned long)(esp_timer_get_time()/1000)
+#define _delay(x) vTaskDelay(x/portTICK_PERIOD_MS);
 
 /**************************************************************************************************/
 
@@ -163,6 +164,8 @@ int8_t ESP32SSHCLIENT::send_cmd(const char* cmd)
             rc = -125; // -125 == timeout
             break;
         }
+
+        _delay(100);
     }
     if(rc != 0) {
         fprintf(stderr, "Error: Command send fail (%d).\n", rc);
@@ -173,49 +176,41 @@ int8_t ESP32SSHCLIENT::send_cmd(const char* cmd)
     // Wait response
     memset(response, '\0', MAX_SSH_CMD_RESPONSE_LENGTH);
     t0 = _millis();
-    while(1)
+    rc = 255;
+    while(rc != 0)
     {
-        // Loop until we block
-        do
-        {
-            if(bytecount >= MAX_SSH_CMD_RESPONSE_LENGTH)
-                break;
-            
-            rc = libssh2_channel_read(channel, response, sizeof(response));
-            if(rc > 0)
-            {
-                bytecount += rc;
-                // Show in real time each byte received
-                /*for(int i = 0; i < rc; ++i)
-                    fputc(response[i], stderr);
-                fprintf(stderr, "\n");*/
-            }
-            else
-            {
-                if((rc != 0) && (rc != LIBSSH2_ERROR_EAGAIN))
-                {
-                    fprintf(stderr, "Error: Read command response fail (%d).\n", rc);
-                    disconnect();
-                    return -1;
-                }
-            }
-
-            t1 = _millis();
-            if(t1 < t0)
-                t1 = t0;
-            if(t1 - t0 > TIMEOUT_CMD_RX)
-            {
-                rc = -125; // -125 == timeout
-                break;
-            }
-        }
-        while(rc > 0);
-
-        // This is due to blocking that would occur otherwise so we loop on this condition
-        if(rc == LIBSSH2_ERROR_EAGAIN)
-            ::socket_wait(sock, session);
-        else
+        if(bytecount >= MAX_SSH_CMD_RESPONSE_LENGTH)
             break;
+        
+        rc = libssh2_channel_read(channel, response, sizeof(response));
+        if(rc > 0)
+        {
+            bytecount += rc;
+            // Show in real time each received byte
+            /*for(int i = 0; i < rc; ++i)
+                fputc(response[i], stderr);
+            fprintf(stderr, "\n");*/
+        }
+        else
+        {
+            if((rc != 0) && (rc != LIBSSH2_ERROR_EAGAIN))
+            {
+                fprintf(stderr, "Error: Read command response fail (%d).\n", rc);
+                disconnect();
+                return -1;
+            }
+
+            _delay(10);
+        }
+
+        t1 = _millis();
+        if(t1 < t0)
+            t1 = t0;
+        if(t1 - t0 > TIMEOUT_CMD_RX)
+        {
+            rc = -125; // -125 == timeout
+            break;
+        }
     }
     response[MAX_SSH_CMD_RESPONSE_LENGTH-1] = '\0';
     if(bytecount < MAX_SSH_CMD_RESPONSE_LENGTH)
@@ -287,11 +282,25 @@ int8_t ESP32SSHCLIENT::session_create(void)
 // Start session handshake
 int8_t ESP32SSHCLIENT::lets_handshake(void)
 {
+    unsigned long t0, t1;
+
     rc = libssh2_session_handshake(session, sock);
+
+    t0 = _millis();
     while(rc == LIBSSH2_ERROR_EAGAIN)
     {
-        // Some delay here could be nice
         rc = libssh2_session_handshake(session, sock);
+
+        t1 = _millis();
+        if(t1 < t0)
+            t1 = t0;
+        if(t1 - t0 > TIMEOUT_HANDSHAKE)
+        {
+            rc = -125; // -125 == timeout
+            break;
+        }
+
+        _delay(100);
     }
     if(rc != 0)
     {
@@ -306,11 +315,25 @@ int8_t ESP32SSHCLIENT::lets_handshake(void)
 // SSH authentication using password
 int8_t ESP32SSHCLIENT::auth_pass(const char* user, const char* pass)
 {
+    unsigned long t0, t1;
+
     rc = libssh2_userauth_password(session, user, pass);
+
+    t0 = _millis();
     while(rc == LIBSSH2_ERROR_EAGAIN)
     {
-        // Some delay here could be nice
         rc = libssh2_userauth_password(session, user, pass);
+
+        t1 = _millis();
+        if(t1 < t0)
+            t1 = t0;
+        if(t1 - t0 > TIMEOUT_AUTH_PASS)
+        {
+            rc = -125; // -125 == timeout
+            break;
+        }
+
+        _delay(100);
     }
     if(rc != 0)
     {
@@ -326,14 +349,27 @@ int8_t ESP32SSHCLIENT::auth_pass(const char* user, const char* pass)
 int8_t ESP32SSHCLIENT::auth_publickey(const char* user, const char* passphrase, 
         const char* pubkey, size_t pubkeylen, const char* privkey, size_t privkeylen)
 {
+    unsigned long t0, t1;
+
     rc = libssh2_userauth_publickey_frommemory(session, user, strlen(user), pubkey, pubkeylen, 
             privkey, privkeylen, passphrase);
     
+    t0 = _millis();
     while(rc == LIBSSH2_ERROR_EAGAIN)
     {
-        // Some delay here could be nice
         rc = libssh2_userauth_publickey_frommemory(session, user, strlen(user), pubkey, pubkeylen, 
             privkey, privkeylen, passphrase);
+        
+        t1 = _millis();
+        if(t1 < t0)
+            t1 = t0;
+        if(t1 - t0 > TIMEOUT_AUTH_PUBKEY)
+        {
+            rc = -125; // -125 == timeout
+            break;
+        }
+
+        _delay(100);
     }
     if(rc != 0)
     {
@@ -347,11 +383,25 @@ int8_t ESP32SSHCLIENT::auth_publickey(const char* user, const char* passphrase,
 
 int8_t ESP32SSHCLIENT::session_open(void)
 {
+    unsigned long t0, t1;
+
     /* Exec non-blocking on the remove host */
+    t0 = _millis();
     while((channel = libssh2_channel_open_session(session)) == NULL && 
             libssh2_session_last_error(session, NULL, NULL, 0) == LIBSSH2_ERROR_EAGAIN)
     {
         ::socket_wait(sock, session);
+
+        t1 = _millis();
+        if(t1 < t0)
+            t1 = t0;
+        if(t1 - t0 > TIMEOUT_SESSION_OPEN)
+        {
+            rc = -125; // -125 == timeout
+            break;
+        }
+
+        _delay(100);
     }
     if(channel == NULL)
     {
@@ -365,15 +415,29 @@ int8_t ESP32SSHCLIENT::session_open(void)
 
 int8_t ESP32SSHCLIENT::channel_close(void)
 {
+    unsigned long t0, t1;
     char* exitsignal = (char*)"none\0";
     int exitcode;
 
     exitcode = 127;
     rc = libssh2_channel_close(channel);
+
+    t0 = _millis();
     while(rc == LIBSSH2_ERROR_EAGAIN)
     {
         ::socket_wait(sock, session);
         rc = libssh2_channel_close(channel);
+
+        t1 = _millis();
+        if(t1 < t0)
+            t1 = t0;
+        if(t1 - t0 > TIMEOUT_CHANNEL_CLOSE)
+        {
+            rc = -125; // -125 == timeout
+            break;
+        }
+
+        _delay(100);
     }
     if(rc == 0)
     {

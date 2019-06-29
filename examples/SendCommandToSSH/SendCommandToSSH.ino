@@ -1,6 +1,5 @@
 /**************************************************************************************************/
-/* Connect to SSH Server using password, execute an uptime command and get the response.          */
-/* in the Server.                                                                                 */
+/* Connect to SSH Server using password, execute an uptime command and get the response each 10s. */
 /**************************************************************************************************/
 
 /* Libraries */

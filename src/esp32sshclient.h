@@ -3,7 +3,7 @@
 // File: esp32sshclient.h
 // Description: Simple abstraction layer for create and use a SSH client from libssh2.
 // Created on: 16 jun. 2019
-// Last modified date: 21 jun. 2019
+// Last modified date: 29 jun. 2019
 // Version: 0.0.1
 /**************************************************************************************************/
 
@@ -33,10 +33,15 @@
 
 /* Constants */
 
-#define MAX_SSH_CMD_RESPONSE_LENGTH 4096 // Max command response bytes
+#define MAX_SSH_CMD_RESPONSE_LENGTH 4096
 
 #define TIMEOUT_CMD_TX 5000 // Max wait 5s for send a command
 #define TIMEOUT_CMD_RX 20000 // Max wait 20s for wait command response
+#define TIMEOUT_HANDSHAKE 10000 // Max wait 10s for SSH session handshake
+#define TIMEOUT_AUTH_PASS 10000 // Max wait 10s user-pass auth login
+#define TIMEOUT_AUTH_PUBKEY 10000 // Max wait 10s publickey auth login
+#define TIMEOUT_SESSION_OPEN 5000 // Max wait 5s for SSH session open
+#define TIMEOUT_CHANNEL_CLOSE 5000 // Max wait 5s for SSH channel close
 
 /**************************************************************************************************/
 
