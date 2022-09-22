@@ -60,6 +60,8 @@ class ESP32SSHCLIENT
         int8_t disconnect(void);
         int8_t is_connected(void);
         int8_t send_cmd(const char* cmd);
+        
+        char response[MAX_SSH_CMD_RESPONSE_LENGTH];
 
     private:
         // Private Attributtes
@@ -67,7 +69,7 @@ class ESP32SSHCLIENT
         LIBSSH2_SESSION* session;
         LIBSSH2_CHANNEL* channel;
         int sock, rc, connected;
-        char response[MAX_SSH_CMD_RESPONSE_LENGTH];
+        
 
         // Private Methods
         int8_t init_libssh2(void);
