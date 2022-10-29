@@ -52,14 +52,16 @@ class ESP32SSHCLIENT
         ~ESP32SSHCLIENT(void);
 
         int8_t connect(const char* host, const uint16_t port, const char* user, const char* pass);
-        int8_t connect(const char* host, const uint16_t port, const char* user, uint8_t* pubkey, 
+        int8_t connect(const char* host, const uint16_t port, const char* user, uint8_t* pubkey,
                 size_t pubkeylen, uint8_t* privkey, size_t privkeylen, const char* key_passphrase);
-        int8_t connect(const char* host, const uint16_t port, const char* user, const char* pubkey, 
-                size_t pubkeylen, const char* privkey, size_t privkeylen, const char* 
+        int8_t connect(const char* host, const uint16_t port, const char* user, const char* pubkey,
+                size_t pubkeylen, const char* privkey, size_t privkeylen, const char*
                 key_passphrase);
         int8_t disconnect(void);
         int8_t is_connected(void);
         int8_t send_cmd(const char* cmd);
+
+
 
     private:
         // Private Attributtes
@@ -67,7 +69,7 @@ class ESP32SSHCLIENT
         LIBSSH2_SESSION* session;
         LIBSSH2_CHANNEL* channel;
         int sock, rc, connected;
-        char response[MAX_SSH_CMD_RESPONSE_LENGTH];
+
 
         // Private Methods
         int8_t init_libssh2(void);
@@ -76,11 +78,12 @@ class ESP32SSHCLIENT
         int8_t session_open(void);
         int8_t lets_handshake(void);
         int8_t auth_pass(const char* user, const char* pass);
-        int8_t auth_publickey(const char* user, const char* passphrase, 
+        int8_t auth_publickey(const char* user, const char* passphrase,
                 const char* pubkey, size_t pubkeylen, const char* privkey, size_t privkeylen);
         int8_t channel_close(void);
         void show_server_fingerprint(void);
         void system_reboot(void);
+        char response[MAX_SSH_CMD_RESPONSE_LENGTH];
 };
 
 /**************************************************************************************************/
